@@ -1,0 +1,43 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: l5d-header-middleware
+  namespace: creditfraud
+spec:
+  headers:
+    customRequestHeaders:
+      l5d-dst-override: "creditfraud-service.creditfraud.svc.cluster.local:8501"
+---
+# Here, an average of 100 requests per second is allowed.
+# In addition, a burst of 50 requests is allowed.
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: test-ratelimit
+  namespace: creditfraud
+spec:
+  rateLimit:
+    average: 100
+    burst: 50
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: traefik
+  creationTimestamp: null
+  name: creditfraud-web-ingress-route
+  namespace: creditfraud
+spec:
+  entryPoints: []
+  routes:
+  - kind: Rule
+    match: PathPrefix(`/`)
+    priority: 0
+    middlewares:
+    - name: l5d-header-middleware
+    - name: test-ratelimit
+    services:
+    - kind: Service
+      name: creditfraud-service
+      port: 8501
