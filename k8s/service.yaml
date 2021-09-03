@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: creditfraud-inference
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: CreditFraud
+  template:
+    metadata:
+      labels:
+        app: CreditFraud
+        tier: backend
+        track: stable
+    spec:
+      containers:
+      - name: creditfraud
+        image: rfdickerson/creditfraud
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          tcpSocket:
+            port: 9000
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1Gi
+          requests:
+            cpu: "1"
+            memory: 1Gi
+        ports:
+        - containerPort: 9000
+        - containerPort: 8500
+          name: grpc
+        - containerPort: 8501
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: creditfraud-service
+spec:
+  selector:
+    app: CreditFraud
+  clusterIP: None
+  ports:
+    - name: grpc
+      port: 8500
+      targetPort: 8500
+    - name: http
+      port: 8501
+      targetPort: 8501

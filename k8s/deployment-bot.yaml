@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraudbot-deployment
+spec:
+  selector:
+    matchLabels:
+      app: fraudbot
+  template:
+    metadata:
+      labels:
+        app: fraudbot
+    spec:
+      containers:
+      - name: fraudbot
+        image: rfdickerson/fraud-bot:latest
+        
